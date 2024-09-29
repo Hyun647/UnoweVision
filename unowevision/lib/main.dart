@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Japanese Learning AI',
+      title: '일본어 학습 AI',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -30,21 +30,22 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   FlutterTts flutterTts = FlutterTts();
   stt.SpeechToText speech = stt.SpeechToText();
-  String _text = "Hello, how can I help you?";
+  String _text = "안녕하세요, 무엇을 도와드릴까요?";
   String _translatedText = "";
   String _feedback = "";
+  bool _isListening = false;
 
   @override
   void initState() {
     super.initState();
-    _speak("Welcome to the Japanese Learning AI app. How can I assist you today?");
+    _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Japanese Learning AI'),
+        title: Text('일본어 학습 AI'),
       ),
       body: Center(
         child: Column(
@@ -53,20 +54,20 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(_text),
             ElevatedButton(
               onPressed: () => _speak(),
-              child: Text('Speak'),
+              child: Text('말하기'),
             ),
             ElevatedButton(
               onPressed: _listen,
-              child: Text('Listen'),
+              child: Text('듣기'),
             ),
             ElevatedButton(
               onPressed: _translate,
-              child: Text('Translate'),
+              child: Text('번역하기'),
             ),
             Text(_translatedText),
             ElevatedButton(
               onPressed: _getFeedback,
-              child: Text('Get Feedback'),
+              child: Text('피드백 받기'),
             ),
             Text(_feedback),
           ],
@@ -76,20 +77,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _speak([String? text]) async {
+    await flutterTts.setLanguage("ko-KR");
     await flutterTts.speak(text ?? _text);
   }
 
   Future _listen() async {
     bool available = await speech.initialize();
     if (available) {
-      speech.listen(onResult: (val) => setState(() {
-        _text = val.recognizedWords;
-        _handleVoiceCommand(_text);
-      }));
+      setState(() {
+        _isListening = true;
+      });
+      speech.listen(
+        onResult: (val) => setState(() {
+          _text = val.recognizedWords;
+          if (val.finalResult) {
+            _isListening = false;
+            _handleVoiceCommand(_text);
+          }
+        }),
+        localeId: "ko_KR",
+      );
     }
   }
 
   Future _translate() async {
+    print('Sending translate request: $_text');
     final response = await http.post(
       Uri.parse('http://localhost:3000/translate'),
       headers: <String, String>{
@@ -104,13 +116,14 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _translatedText = jsonDecode(response.body)['translatedText'];
       });
-      _speak("Translation: $_translatedText");
+      _speak("번역: $_translatedText");
     } else {
-      throw Exception('Failed to translate text');
+      _speak('번역에 실패했습니다');
     }
   }
 
   Future _getFeedback() async {
+    print('Sending feedback request: $_text');
     final response = await http.post(
       Uri.parse('http://localhost:3000/feedback'),
       headers: <String, String>{
@@ -125,21 +138,21 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _feedback = jsonDecode(response.body)['feedback'];
       });
-      _speak("Feedback: $_feedback");
+      _speak("피드백: $_feedback");
     } else {
-      throw Exception('Failed to get feedback');
+      _speak('피드백 받기에 실패했습니다');
     }
   }
 
   void _handleVoiceCommand(String command) {
-    if (command.toLowerCase().contains("translate")) {
+    if (command.contains("번역")) {
       _translate();
-    } else if (command.toLowerCase().contains("feedback")) {
+    } else if (command.contains("피드백")) {
       _getFeedback();
-    } else if (command.toLowerCase().contains("speak")) {
+    } else if (command.contains("말하기")) {
       _speak();
     } else {
-      _speak("Sorry, I didn't understand that command.");
+      _speak("죄송합니다, 그 명령을 이해하지 못했습니다.");
     }
   }
 }
