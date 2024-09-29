@@ -11,85 +11,17 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 app.use(bodyParser.json());
 
-// Translate 요청 (GPT-4 사용)
-app.post('/translate', async (req, res) => {
-  console.log('Translate request received:', req.body);
-  const { text } = req.body;
-
-  try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that translates text.' }, // 시스템 메시지
-        { role: 'user', content: `Translate the following text to Japanese: ${text}` }  // 사용자 요청 메시지
-      ],
-      max_tokens: 60,
-      temperature: 0.7,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const translatedText = response.data.choices?.[0]?.message?.content?.trim(); // 응답 데이터 처리
-    if (translatedText) {
-      res.json({ translatedText });
-    } else {
-      res.status(500).send('Translation failed: No response data');
-    }
-    
-  } catch (error) {
-    console.error('Translation failed:', error.response ? error.response.data : error.message);
-    res.status(500).send('Translation failed');
-  }
-});
-
-// Feedback 요청 (GPT-4 사용)
-app.post('/feedback', async (req, res) => {
-  console.log('Feedback request received:', req.body);
-  const { text } = req.body;
-
-  try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that provides feedback on pronunciation.' }, // 시스템 메시지
-        { role: 'user', content: `Provide feedback on the pronunciation of the following Japanese text: ${text}` }  // 사용자 요청 메시지
-      ],
-      max_tokens: 60,
-      temperature: 0.7,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const feedback = response.data.choices?.[0]?.message?.content?.trim(); // 응답 데이터 처리
-    if (feedback) {
-      res.json({ feedback });
-    } else {
-      res.status(500).send('Feedback failed: No response data');
-    }
-    
-  } catch (error) {
-    console.error('Feedback generation failed:', error.response ? error.response.data : error.message);
-    res.status(500).send('Feedback generation failed');
-  }
-});
-
 // Answer 요청 (GPT-4 사용)
 app.post('/answer', async (req, res) => {
-  console.log('Answer request received:', req.body);
+  console.log('답변 요청을 받았습니다:', req.body);
   const { question } = req.body;
 
   try {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
       messages: [
-        { role: 'system', content: 'You are a helpful assistant that answers questions in Korean.' }, // 시스템 메시지
-        { role: 'user', content: `Answer the following question in Korean: ${question}` }  // 사용자 요청 메시지
+        { role: 'system', content: '당신은 시각 장애인을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.' }, // 시스템 메시지
+        { role: 'user', content: `다음 질문에 한국어로 답변해 주세요: ${question}` }  // 사용자 요청 메시지
       ],
       max_tokens: 60,
       temperature: 0.7,
@@ -104,15 +36,15 @@ app.post('/answer', async (req, res) => {
     if (answer) {
       res.json({ answer });
     } else {
-      res.status(500).send('Answer failed: No response data');
+      res.status(500).send('답변 실패: 응답 데이터가 없습니다');
     }
     
   } catch (error) {
-    console.error('Answer generation failed:', error.response ? error.response.data : error.message);
-    res.status(500).send('Answer generation failed');
+    console.error('답변 생성 실패:', error.response ? error.response.data : error.message);
+    res.status(500).send('답변 생성 실패');
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`서버가 http://localhost:${port} 에서 실행 중입니다`);
 });
