@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -31,9 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   FlutterTts flutterTts = FlutterTts();
   stt.SpeechToText speech = stt.SpeechToText();
   String _text = "안녕하세요, 무엇을 도와드릴까요?";
-  String _translatedText = "";
-  String _feedback = "";
   bool _isListening = false;
+  Color _backgroundColor = Colors.white;
 
   @override
   void initState() {
@@ -47,30 +45,27 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('일본어 학습 AI'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(_text),
-            ElevatedButton(
-              onPressed: () => _speak(),
-              child: Text('말하기'),
-            ),
-            ElevatedButton(
-              onPressed: _listen,
-              child: Text('듣기'),
-            ),
-            ElevatedButton(
-              onPressed: _translate,
-              child: Text('번역하기'),
-            ),
-            Text(_translatedText),
-            ElevatedButton(
-              onPressed: _getFeedback,
-              child: Text('피드백 받기'),
-            ),
-            Text(_feedback),
-          ],
+      body: GestureDetector(
+        onDoubleTap: () => _speak(),
+        onLongPressStart: (_) {
+          setState(() {
+            _backgroundColor = Colors.green;
+          });
+          _listen();
+        },
+        onLongPressEnd: (_) {
+          setState(() {
+            _backgroundColor = Colors.white;
+          });
+          _stopListening();
+        },
+        onTap: () => _speak(_text),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 100),
+          color: _backgroundColor,
+          child: Center(
+            child: Text(_text),
+          ),
         ),
       ),
     );
@@ -92,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _text = val.recognizedWords;
           if (val.finalResult) {
             _isListening = false;
-            _handleVoiceCommand(_text);
+            _getAnswer(); // 음성 인식이 끝나면 바로 질문을 보냄
           }
         }),
         localeId: "ko_KR",
@@ -100,57 +95,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future _translate() async {
-    print('Sending translate request: $_text');
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/translate'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'text': _text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _translatedText = jsonDecode(response.body)['translatedText'];
-      });
-      _speak("번역: $_translatedText");
-    } else {
-      _speak('번역에 실패했습니다');
-    }
+  Future _stopListening() async {
+    speech.stop();
+    setState(() {
+      _isListening = false;
+    });
   }
 
-  Future _getFeedback() async {
-    print('Sending feedback request: $_text');
+  Future _getAnswer() async {
+    print('Sending answer request: $_text');
     final response = await http.post(
-      Uri.parse('http://localhost:3000/feedback'),
+      Uri.parse('http://localhost:3000/answer'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, String>{
-        'text': _text,
+        'question': _text,
       }),
     );
 
     if (response.statusCode == 200) {
+      final answer = jsonDecode(response.body)['answer'];
       setState(() {
-        _feedback = jsonDecode(response.body)['feedback'];
+        _text = answer;
       });
-      _speak("피드백: $_feedback");
     } else {
-      _speak('피드백 받기에 실패했습니다');
+      _speak('질문에 대한 답변을 가져오지 못했습니다');
     }
   }
 
   void _handleVoiceCommand(String command) {
-    if (command.contains("번역")) {
-      _translate();
-    } else if (command.contains("피드백")) {
-      _getFeedback();
-    } else if (command.contains("말하기")) {
-      _speak();
+    if (command.contains("질문")) {
+      _getAnswer();
     } else {
       _speak("죄송합니다, 그 명령을 이해하지 못했습니다.");
     }

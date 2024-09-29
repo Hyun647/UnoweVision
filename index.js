@@ -79,6 +79,40 @@ app.post('/feedback', async (req, res) => {
   }
 });
 
+// Answer 요청 (GPT-4 사용)
+app.post('/answer', async (req, res) => {
+  console.log('Answer request received:', req.body);
+  const { question } = req.body;
+
+  try {
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that answers questions in Korean.' }, // 시스템 메시지
+        { role: 'user', content: `Answer the following question in Korean: ${question}` }  // 사용자 요청 메시지
+      ],
+      max_tokens: 60,
+      temperature: 0.7,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const answer = response.data.choices?.[0]?.message?.content?.trim(); // 응답 데이터 처리
+    if (answer) {
+      res.json({ answer });
+    } else {
+      res.status(500).send('Answer failed: No response data');
+    }
+    
+  } catch (error) {
+    console.error('Answer generation failed:', error.response ? error.response.data : error.message);
+    res.status(500).send('Answer generation failed');
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
