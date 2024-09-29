@@ -46,6 +46,20 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    _speak(_getTabName(index));
+  }
+
+  String _getTabName(int index) {
+    switch (index) {
+      case 0:
+        return "홈";
+      case 1:
+        return "검색";
+      case 2:
+        return "프로필";
+      default:
+        return "";
+    }
   }
 
   @override
