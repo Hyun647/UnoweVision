@@ -1,0 +1,9 @@
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_tts: ^3.2.2
+  speech_to_text: ^4.0.4
+  provider: ^5.0.0
+  http: ^0.13.3
+  # 또는 bloc 패키지 사용 가능
+  # flutter_bloc: ^7.0.0
