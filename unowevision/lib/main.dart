@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
+  List<Map<String, String>> _qaList = [];
 
   @override
   void initState() {
@@ -115,7 +116,13 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         _stopListening();
       },
-      onTap: () => _stopTTS(),
+      onTap: () {
+        try {
+          _stopTTS();
+        } catch (e) {
+          print('Error stopping TTS: $e');
+        }
+      },
       child: AnimatedContainer(
         duration: Duration(milliseconds: 100),
         color: _backgroundColor,
@@ -155,10 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text('질문 보내기'),
               ),
               SizedBox(height: 20),
-              Text(
-                _text,
-                style: TextStyle(fontSize: 18),
-              ),
+              ..._qaList.map((qa) => _buildCard(qa['question']!, qa['answer']!)).toList(),
             ],
           ),
         ),
@@ -177,15 +181,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 10),
           Text(
-            '사용자 이름',
+            'UnoweTeam',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 5),
           Text(
-            'user@example.com',
+            'unoweteam@gmail.com',
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCard(String question, String answer) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '질문: $question',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              '답변: $answer',
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -200,35 +227,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _listen() async {
-    bool available = await speech.initialize();
-    if (available) {
-      setState(() {
-        _isListening = true;
-      });
-      speech.listen(
-        onResult: (val) => setState(() {
-          _text = val.recognizedWords;
-          if (val.finalResult) {
-            _isListening = false;
-            _getAnswer(); // 음성 인식이 끝나면 바로 질문을 보냄
-          }
-        }),
-        localeId: "ko_KR",
+    try {
+      bool available = await speech.initialize(
+        onStatus: (status) => print('onStatus: $status'),
+        onError: (error) => print('onError: $error'),
       );
+      if (available) {
+        setState(() {
+          _isListening = true;
+        });
+        speech.listen(
+          onResult: (val) => setState(() {
+            _text = val.recognizedWords;
+            if (val.finalResult) {
+              _isListening = false;
+              _getAnswer(); // 음성 인식이 끝나면 바로 질문을 보냄
+            }
+          }),
+          localeId: "ko_KR",
+        );
+      }
+    } catch (e) {
+      print('Error initializing speech recognition: $e');
     }
   }
 
   Future _stopListening() async {
-    speech.stop();
-    setState(() {
-      _isListening = false;
-    });
+    try {
+      speech.stop();
+      setState(() {
+        _isListening = false;
+      });
+    } catch (e) {
+      print('Error stopping speech recognition: $e');
+    }
   }
 
   Future _getAnswer() async {
     print('Sending answer request: $_text');
     final response = await http.post(
-      Uri.parse('http://localhost:3000/answer'),
+      Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -240,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (response.statusCode == 200) {
       final answer = jsonDecode(response.body)['answer'];
       setState(() {
+        _qaList.add({'question': _text, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
@@ -254,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     print('Sending question: $question');
     final response = await http.post(
-      Uri.parse('http://localhost:3000/answer'),
+      Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -266,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (response.statusCode == 200) {
       final answer = jsonDecode(response.body)['answer'];
       setState(() {
+        _qaList.add({'question': question, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
