@@ -8,13 +8,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart'; // flutter_dotenv 패키지
 import 'dart:io';
 
 void main() async {
-  await dotenv.load(fileName: ".env"); // 환경 변수 로드
+  WidgetsFlutterBinding.ensureInitialized(); // Flutter 프레임워크가 초기화될 때까지 대기
+  try {
+    await dotenv.load(fileName: ".env"); // 환경 변수 로드
+    print('환경 변수 로드 성공');
+  } catch (e) {
+    print('Error loading .env file: $e'); // 예외 처리 추가
+  }
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('MyApp 빌드 시작');
     return MaterialApp(
       title: '일본어 학습 AI',
       theme: ThemeData(
@@ -47,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    print('HomeScreen 초기화');
     _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
   }
 
@@ -72,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('HomeScreen 빌드 시작');
     List<Widget> _pages = <Widget>[
       _buildHome(),
       _buildSearch(),
