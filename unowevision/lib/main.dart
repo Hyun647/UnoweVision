@@ -3,8 +3,12 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:google_speech/google_speech.dart'; // google_speech 패키지 import
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // flutter_dotenv 패키지 추가
+import 'dart:io';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env"); // 환경 변수 로드
   runApp(MyApp());
 }
 
@@ -36,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
   List<Map<String, String>> _qaList = [];
+
+  // 발음 평가 결과를 저장할 변수 추가
+  String _pronunciationScore = "";
 
   @override
   void initState() {
@@ -76,7 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('일본어 학습 AI'),
         backgroundColor: Colors.black,
       ),
-      body: _pages[_selectedIndex],
+      body: Column(
+        children: [
+          Expanded(child: _pages[_selectedIndex]),
+          if (_pronunciationScore.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                _pronunciationScore,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -242,6 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (val.finalResult) {
               _isListening = false;
               _getAnswer(); // 음성 인식이 끝나면 바로 질문을 보냄
+              _evaluatePronunciation(_text); // 발음 평가 함수 호출
             }
           }),
           localeId: "ko_KR",
@@ -312,5 +332,37 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       _speak('질문에 대한 답변을 가져오지 못했습니다');
     }
+  }
+
+  // 발음 평가 함수 추가
+  Future _evaluatePronunciation(String text) async {
+    final serviceAccount = ServiceAccount.fromString(
+      await File(dotenv.env['GOOGLE_APPLICATION_CREDENTIALS']!).readAsString(),
+    );
+    final client = SpeechToText.viaServiceAccount(serviceAccount);
+    final config = RecognitionConfig(
+      encoding: AudioEncoding.LINEAR16,
+      model: RecognitionModel.basic,
+      sampleRateHertz: 16000,
+      languageCode: 'ko-KR',
+    );
+
+    final audio = await _getAudioContent(); // 음성 데이터를 가져오는 함수
+
+    final response = await client.recognize(config, audio);
+    final score = response.results.first.alternatives.first.confidence;
+
+    setState(() {
+      _pronunciationScore = "발음 평가 점수: ${score * 100}%";
+    });
+
+    _speak(_pronunciationScore); // 발음 평가 점수를 TTS로 읽어줌
+  }
+
+  // 음성 데이터를 가져오는 함수 (예시)
+  Future<List<int>> _getAudioContent() async {
+    // 여기에 음성 데이터를 가져오는 로직을 추가하세요
+    // 예를 들어, 로컬 파일에서 음성 데이터를 읽어올 수 있습니다.
+    return [];
   }
 }
