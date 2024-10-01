@@ -42,7 +42,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   FlutterTts flutterTts = FlutterTts();
   stt.SpeechToText speech = stt.SpeechToText();
-  String _text = "안녕하세요, 무엇을 도와드릴까요?";
+  String _text = "안녕하세요\n무엇을 도와드릴까요?";
   bool _isListening = false;
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
@@ -59,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _requestMicrophonePermission(); // 마이크 권한 요청
     _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
   }
+
 
   void _requestMicrophonePermission() async {
     var status = await Permission.microphone.status;
@@ -97,10 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     print('HomeScreen 빌드 시작');
     List<Widget> _pages = <Widget>[
-      _buildHome(),
-      _buildSearch(),
-      _buildProfile(),
+      _buildHome(), // 홈 화면
+      _buildSearch(), // 검색 화면
+      _buildProfile(), // 프로필 화면
     ];
+
 
     return Scaffold(
       appBar: AppBar(
@@ -109,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          Expanded(child: _pages[_selectedIndex]),
+          Expanded(child: _pages[_selectedIndex]), // 선택된 페이지 표시
           if (_pronunciationScore.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -138,18 +140,18 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
-        backgroundColor: Colors.black,
-        unselectedItemColor: Colors.white,
       ),
     );
   }
+
 
   Widget _buildHome() {
     return GestureDetector(
       onDoubleTap: () => _speak(),
       onLongPressStart: (_) {
         setState(() {
-          _backgroundColor = Colors.green;
+          _backgroundColor = Colors.white;
+          _text = "음성인식 중입니다.";
         });
         _listen();
       },
@@ -166,16 +168,43 @@ class _HomeScreenState extends State<HomeScreen> {
           print('Error stopping TTS: $e');
         }
       },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 100),
-        color: _backgroundColor,
-        child: Center(
-          child: Text(
-            _text,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: Duration(milliseconds: 100),
+            color: _backgroundColor, // 배경색을 검은색으로 설정
+            child: Center(
+              child: Icon(
+                Icons.mic, // 음성 인식에 반응하는 아이콘
+                size: 100,
+                color: _isListening ? Colors.green : Colors.red, // 음성 인식 중일 때 색상 변경
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            top: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'Unowe',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                _text,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -278,13 +307,14 @@ class _HomeScreenState extends State<HomeScreen> {
       if (available) {
         setState(() {
           _isListening = true;
+          _text = "음성인식 중입니다.";
         });
         speech.listen(
           onResult: (val) => setState(() {
             _text = val.recognizedWords;
             if (val.finalResult) {
               _isListening = false;
-              _getAnswer(); // 음성 인식이 끝나면 바로 질문을 보냄
+              _getAnswer(_text); // 음성 인식이 끝나면 바로 질문을 보냄
               _evaluatePronunciation(_text); // 발음 평가 함수 호출
             }
           }),
@@ -300,31 +330,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _stopListening() async {
     try {
-      speech.stop();
+      await speech.stop();
       setState(() {
         _isListening = false;
+        _text = "안녕하세요\n무엇을 도와드릴까요?";
       });
     } catch (e) {
       print('Error stopping speech recognition: $e');
     }
   }
 
-  Future _getAnswer() async {
-    print('Sending answer request: $_text');
+  Future _getAnswer(String question) async {
+    print('Sending answer request: $question');
     final response = await http.post(
       Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, String>{
-        'question': _text,
+        'question': question,
       }),
     );
 
     if (response.statusCode == 200) {
       final answer = jsonDecode(response.body)['answer'];
       setState(() {
-        _qaList.add({'question': _text, 'answer': answer});
+        _qaList.add({'question': question, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
