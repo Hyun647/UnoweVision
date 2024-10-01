@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:google_speech/google_speech.dart'; // google_speech 패키지 import
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // flutter_dotenv 패키지 추가
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart'; // permission_handler 패키지 추가
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 프레임워크가 초기화될 때까지 대기
@@ -55,7 +56,21 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     print('HomeScreen 초기화');
+    _requestMicrophonePermission(); // 마이크 권한 요청
     _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
+  }
+
+  void _requestMicrophonePermission() async {
+    var status = await Permission.microphone.status;
+    if (!status.isGranted) {
+      if (await Permission.microphone.request().isGranted) {
+        print('마이크 권한 허용됨');
+      } else {
+        print('마이크 권한 거부됨');
+      }
+    } else {
+      print('마이크 권한 이미 허용됨');
+    }
   }
 
   void _onItemTapped(int index) {
@@ -275,9 +290,11 @@ class _HomeScreenState extends State<HomeScreen> {
           }),
           localeId: "ko_KR",
         );
+      } else {
+        print('음성 인식 사용 불가');
       }
     } catch (e) {
-      print('Error initializing speech recognition: $e');
+      print('음성 인식 초기화 오류: $e');
     }
   }
 
