@@ -35,6 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromRGBO(250, 250, 250, 1), // 전체 배경색을 RGB(250, 250, 250)으로 설정
       body: Stack(
         children: [
           PageView.builder(
@@ -50,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
           ),
           Positioned(
-            top: 70, // 점들을 조금 더 아래로 내림
+            top: 70,
             left: 0,
             right: 0,
             child: Row(
@@ -73,34 +74,49 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget buildPageContent(OnboardingPage page) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          SizedBox(height: 120), // 80에서 120으로 변경하여 더 아래로 내림
-          Text(
-            page.title,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 20),
-          Text(
-            page.description,
-            style: TextStyle(fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          Expanded(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Image.asset(
-                page.image,
-                fit: BoxFit.contain,
-                width: double.infinity,
+    return Container(
+      color: Color.fromRGBO(250, 250, 250, 1), // 각 페이지의 배경색도 RGB(250, 250, 250)으로 설정
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 120), // 80에서 120으로 변경하여 더 아래로 내림
+            Text(
+              page.title,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            Text(
+              page.description,
+              style: TextStyle(fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.asset(
+                    page.image,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                  ),
+                  if (_currentPage == 0 || _currentPage == 2) // 1번과 3번 화면에만 GIF 표시
+                    Positioned(
+                      bottom: MediaQuery.of(context).size.height * 0.05, // 아래에서부터의 위치 조정
+                      child: Image.asset(
+                        'assets/images/waitingimg.gif',
+                        width: 240, // 크기를 더 키움
+                        height: 240,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -121,7 +137,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color.fromRGBO(250, 250, 250, 1), // 하단 버튼 영역의 배경색도 RGB(250, 250, 250)으로 설정
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
@@ -130,55 +146,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home');
-            },
-            child: Text(
-              'SKIP',
-              style: TextStyle(
-                color: Colors.blue, // SKIP 버튼의 텍스트 색을 파란색으로 변경
-                fontSize: 16,
+      child: _currentPage == _pages.length - 1
+          ? Center( // 마지막 페이지일 때 버튼을 가운데 정렬
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/home');
+                },
+                child: Text('시작하기'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                ),
               ),
-            ),
-          ),
-          _currentPage == _pages.length - 1
-              ? ElevatedButton(
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home');
                   },
-                  child: Text('시작하기'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white, // 텍스트 색상을 흰색으로 설정
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                  child: Text(
+                    'SKIP',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 16,
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                   ),
-                )
-              : ElevatedButton(
+                ),
+                ElevatedButton(
                   onPressed: () {
                     _pageController.nextPage(
                       duration: Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                     );
                   },
-                  child: Text('NEXT'), // '다음'을 'NEXT'로 변경
+                  child: Text('NEXT'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white, // 텍스트 색상을 흰색으로 설정
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                   ),
                 ),
-        ],
-      ),
+              ],
+            ),
     );
   }
 }
