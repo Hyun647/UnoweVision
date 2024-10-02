@@ -3,18 +3,19 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:google_speech/google_speech.dart'; // google_speech 패키지 import
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // flutter_dotenv 패키지 추가
+import 'package:google_speech/google_speech.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
-import 'package:permission_handler/permission_handler.dart'; // permission_handler 패키지 추가
+import 'package:permission_handler/permission_handler.dart';
+import 'screens/onboarding_screen.dart'; // 온보딩 화면 import
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Flutter 프레임워크가 초기화될 때까지 대기
+  WidgetsFlutterBinding.ensureInitialized();
   try {
-    await dotenv.load(fileName: ".env"); // 환경 변수 로드
+    await dotenv.load(fileName: ".env");
     print('환경 변수 로드 성공');
   } catch (e) {
-    print('Error loading .env file: $e'); // 예외 처리 추가
+    print('Error loading .env file: $e');
   }
   runApp(MyApp());
 }
@@ -29,7 +30,10 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HomeScreen(),
+      home: OnboardingScreen(), // 초기 화면을 OnboardingScreen으로 설정
+      routes: {
+        '/home': (context) => HomeScreen(), // HomeScreen으로 이동하기 위한 라우트 추가
+      },
     );
   }
 }
