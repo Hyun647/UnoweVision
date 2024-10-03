@@ -103,16 +103,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     width: double.infinity,
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).size.height * 0.085, // waitingimg와 상단의 중간 위치로 조정
+                    top: 10, // 상단에서 약간의 여백을 줍니다.
                     left: 0,
                     right: 0,
                     child: Text(
                       'Unowe',
                       style: TextStyle(
                         color: Color(0xFF007AFF),
-                        fontSize: 48, // 글자 크기를 더 키움
-                        fontFamily: 'Inknut Antiqua', // 폰트를 Inknut Antiqua로 변경
-                        fontWeight: FontWeight.w400,
+                        fontSize: 36, // 적당히 큰 크기로 설정
+                        fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),

@@ -32,7 +32,3 @@ flutter:
   assets:
     - assets/images/onboardingphone.png
     - assets/images/waitingimg.gif
-  fonts:
-    - family: Inknut Antiqua
-      fonts:
-        - asset: assets/fonts/InknutAntiqua-Regular.ttf
