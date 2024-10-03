@@ -102,12 +102,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     fit: BoxFit.contain,
                     width: double.infinity,
                   ),
+                  Positioned(
+                    top: MediaQuery.of(context).size.height * 0.085, // waitingimg와 상단의 중간 위치로 조정
+                    left: 0,
+                    right: 0,
+                    child: Text(
+                      'Unowe',
+                      style: TextStyle(
+                        color: Color(0xFF007AFF),
+                        fontSize: 48, // 글자 크기를 더 키움
+                        fontFamily: 'Inknut Antiqua', // 폰트를 Inknut Antiqua로 변경
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   if (_currentPage == 0 || _currentPage == 2) // 1번과 3번 화면에만 GIF 표시
                     Positioned(
-                      bottom: MediaQuery.of(context).size.height * 0.05, // 아래에서부터의 위치 조정
+                      top: MediaQuery.of(context).size.height * 0.17, // 위치를 더 위로 조정
                       child: Image.asset(
                         'assets/images/waitingimg.gif',
-                        width: 240, // 크기를 더 키움
+                        width: 230, 
                         height: 240,
                         fit: BoxFit.contain,
                       ),
