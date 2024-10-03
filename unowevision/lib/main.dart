@@ -147,24 +147,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
+    final apiKey = '여기에 API키 입력'; // 실제 API 키로 교체
     final response = await http.post(
-      Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
+      Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
       },
-      body: jsonEncode(<String, String>{
-        'question': question,
+      body: jsonEncode({
+        'model': 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
+        'messages': [
+          {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.'},
+          {'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'}
+        ],
+        'temperature': 0.7,
       }),
     );
 
     if (response.statusCode == 200) {
-      final answer = jsonDecode(response.body)['answer'];
+      // 응답 본문을 UTF-8로 디코딩
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final answer = jsonDecode(decodedResponse)['choices'][0]['message']['content'].trim();
       setState(() {
         _qaList.add({'question': question, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
     } else {
+      print('Error: ${response.statusCode}');
+      print('Response body: ${response.body}');
       _speak('질문에 대한 답변을 가져오지 못했습니다');
     }
   }
@@ -174,24 +185,33 @@ class _HomeScreenState extends State<HomeScreen> {
     if (question.isEmpty) return;
 
     print('Sending question: $question');
+    final apiKey = dotenv.env['OPENAI_API_KEY'];
     final response = await http.post(
-      Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
+      Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
       },
-      body: jsonEncode(<String, String>{
-        'question': question,
+      body: jsonEncode({
+        'model': 'gpt-4', // gpt-4 또는 gpt-4-turbo 모델 사용
+        'messages': [
+          {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.'},
+          {'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'}
+        ],
+        'temperature': 0.7,
       }),
     );
 
     if (response.statusCode == 200) {
-      final answer = jsonDecode(response.body)['answer'];
+      final answer = jsonDecode(response.body)['choices'][0]['message']['content'].trim();
       setState(() {
         _qaList.add({'question': question, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
     } else {
+      print('Error: ${response.statusCode}');
+      print('Response body: ${response.body}');
       _speak('질문에 대한 답변을 가져오지 못했습니다');
     }
   }
@@ -229,6 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openCamera() {
+    _speak("카메라"); // 카메라 화면으로 전환 시 "카메라" 알림
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => CameraScreen()),
@@ -313,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 _text,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.center, 
               ),
             ),
           ),
@@ -415,7 +436,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _sendPictureToServer(XFile image) async {
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://11.104.211.212:3000/upload'), // 서버의 로컬 IP 주소와 포트 번호 확인
+      Uri.parse('http://110.15.29.199:7654/upload'), // 서버의 IP 주소와 포트 번호 확인
     );
     request.files.add(await http.MultipartFile.fromPath('picture', image.path));
     final response = await request.send();
@@ -448,6 +469,7 @@ class _CameraScreenState extends State<CameraScreen> {
         }, // 화면을 꾹 누르면 사진 촬영
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity! > 0) {
+            _speak("홈"); // 홈 화면으로 전환 시 "홈" 알림
             Navigator.pop(context); // 왼쪽으로 드래그하면 홈 화면으로 돌아감
           }
         },
