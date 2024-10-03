@@ -19,6 +19,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     print('MyApp 빌드 시작');
@@ -34,6 +36,8 @@ class MyApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -46,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> _qaList = [];
+  final List<Map<String, String>> _qaList = [];
 
   // 발음 평가 결과를 저장할 변수 추가
   String _pronunciationScore = "";
@@ -81,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     print('HomeScreen 빌드 시작');
-    List<Widget> _pages = <Widget>[
+    List<Widget> pages = <Widget>[
       _buildHome(),
       _buildSearch(),
       _buildProfile(),
@@ -89,18 +93,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('일본어 학습 AI'),
+        title: const Text('일본어 학습 AI'),
         backgroundColor: Colors.black,
       ),
       body: Column(
         children: [
-          Expanded(child: _pages[_selectedIndex]),
+          Expanded(child: pages[_selectedIndex]),
           if (_pronunciationScore.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 _pronunciationScore,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
         ],
@@ -152,12 +156,12 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 100),
         color: _backgroundColor,
         child: Center(
           child: Text(
             _text,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ),
@@ -170,26 +174,26 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Expanded(
           child: ListView(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             children: [
-              Text(
+              const Text(
                 'GPT에게 질문하세요:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: _controller,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: '질문 입력',
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _sendQuestion,
-                child: Text('질문 보내기'),
+                child: const Text('질문 보내기'),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ..._qaList.map((qa) => _buildCard(qa['question']!, qa['answer']!)).toList(),
             ],
           ),
@@ -199,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfile() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -224,20 +228,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCard(String question, String answer) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               '질문: $question',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               '답변: $answer',
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),
