@@ -7,7 +7,8 @@ import 'package:google_speech/google_speech.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'screens/onboarding_screen.dart'; // 온보딩 화면 import
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,11 +31,29 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: OnboardingScreen(), // 초기 화면을 OnboardingScreen으로 설정
+      home: FutureBuilder<bool>(
+        future: _checkOnboardingCompleted(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else {
+            if (snapshot.data == true) {
+              return HomeScreen();
+            } else {
+              return OnboardingScreen();
+            }
+          }
+        },
+      ),
       routes: {
-        '/home': (context) => HomeScreen(), // HomeScreen으로 이동하기 위한 라우트 추가
+        '/home': (context) => HomeScreen(),
       },
     );
+  }
+
+  Future<bool> _checkOnboardingCompleted() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('onboardingCompleted') ?? false;
   }
 }
 

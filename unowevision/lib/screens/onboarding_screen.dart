@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart'; // HomeScreen이 정의된 파일을 import
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -31,6 +33,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       image: 'assets/images/onboardingphone.png',
     ),
   ];
+
+  void _completeOnboarding() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboardingCompleted', true);
+    Navigator.of(context).pushReplacementNamed('/home');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 if (index == 1)
                   Positioned(
-                    top: screenHeight * 0.016, // 여기를 수정했습니다. 조금 더 위로 올렸습니다.
+                    top: screenHeight * 0.016,
                     child: buildCameraUI(screenWidth, screenHeight),
                   ),
                 if (index != 1)
@@ -373,7 +381,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: _currentPage == _pages.length - 1
           ? Center(
               child: ElevatedButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                onPressed: _completeOnboarding,
                 child: Text('시작하기'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
@@ -392,7 +400,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                  onPressed: _completeOnboarding,
                   child: Text(
                     'SKIP',
                     style: TextStyle(
@@ -403,12 +411,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 SizedBox(width: screenWidth * 0.25),
                 ElevatedButton(
-                  onPressed: () {
-                    _pageController.nextPage(
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
+                  onPressed: () => _pageController.nextPage(
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  ),
                   child: Text('NEXT'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
