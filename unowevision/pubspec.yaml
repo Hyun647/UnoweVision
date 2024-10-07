@@ -9,6 +9,7 @@ environment:
   sdk: ">=2.17.0 <3.0.0"  # Dart SDK 버전을 2.17.0 이상으로 설정하여 패키지 호환성 해결
 
 dependencies:
+  webview_flutter: ^4.0.0
   flutter:
     sdk: flutter
   speech_to_text: ^7.0.0  # null safety 지원되는 최신 버전으로 변경
