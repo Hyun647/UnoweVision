@@ -104,6 +104,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fit: BoxFit.contain,
                   width: double.infinity,
                 ),
+                if (index == 1)
+                  Positioned(
+                    top: screenHeight * 0.016, // 여기를 수정했습니다. 조금 더 위로 올렸습니다.
+                    child: buildCameraUI(screenWidth, screenHeight),
+                  ),
                 if (index != 1)
                   Positioned(
                     top: screenHeight * 0.1,
@@ -118,11 +123,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ),
-                if (index == 1)
-                  Positioned(
-                    top: screenHeight * 0.02,
-                    child: buildCameraUI(screenWidth, screenHeight),
                   ),
                 if (index == 0 || index == 2)
                   Positioned(
