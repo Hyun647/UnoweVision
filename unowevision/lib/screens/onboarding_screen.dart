@@ -36,58 +36,65 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFAFAFA),
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _pages.length,
-            physics: ClampingScrollPhysics(),
-            onPageChanged: (int page) => setState(() => _currentPage = page),
-            itemBuilder: (context, index) => buildPageContent(_pages[index], index),
-          ),
-          Positioned(
-            top: 70,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => buildDot(index),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: _pages.length,
+                physics: ClampingScrollPhysics(),
+                onPageChanged: (int page) => setState(() => _currentPage = page),
+                itemBuilder: (context, index) => buildPageContent(_pages[index], index, constraints),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: buildBottomButtons(),
-          ),
-        ],
+              Positioned(
+                top: constraints.maxHeight * 0.1,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _pages.length,
+                    (index) => buildDot(index),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: buildBottomButtons(constraints),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget buildPageContent(OnboardingPage page, int index) {
+  Widget buildPageContent(OnboardingPage page, int index, BoxConstraints constraints) {
+    double screenWidth = constraints.maxWidth;
+    double screenHeight = constraints.maxHeight;
+
     return Container(
       color: Color(0xFFFAFAFA),
-      padding: EdgeInsets.symmetric(horizontal: 40),
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 100), // 120에서 100으로 줄임
+          SizedBox(height: screenHeight * 0.15),
           Text(
             page.title,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: screenWidth * 0.06, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10), // 20에서 10으로 줄임
+          SizedBox(height: screenHeight * 0.02),
           Text(
             page.description,
-            style: TextStyle(fontSize: 13),
+            style: TextStyle(fontSize: screenWidth * 0.035),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10), // 새로 추가한 SizedBox
+          SizedBox(height: screenHeight * 0.02),
           Expanded(
             child: Stack(
               alignment: Alignment.topCenter,
@@ -97,250 +104,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fit: BoxFit.contain,
                   width: double.infinity,
                 ),
-                if (index != 1) // Unowe 텍스트를 2번째 페이지에서 제외
+                if (index != 1)
                   Positioned(
-                    top: 80,
+                    top: screenHeight * 0.1,
                     left: 0,
                     right: 0,
                     child: Text(
                       'Unowe',
                       style: TextStyle(
                         color: Color(0xFF007AFF),
-                        fontSize: 44,
+                        fontSize: screenWidth * 0.12,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                if (index == 1) // 2번째 페이지에 카메라 UI 추가
+                if (index == 1)
                   Positioned(
-                    top: 10,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 252, // onboardingphone 이미지 너비에 맞춤
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(35),
-                              topRight: Radius.circular(35),
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                left: 25, // 왼쪽에서 오른쪽으로 변경
-                                top: 25, // 0에서 22로 변경하여 아이콘을 아래로 내림
-                                child: Container(
-                                  width: 15, // 22에서 18로 줄임
-                                  height: 15, // 22에서 18로 줄임
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.transparent, // 배경색을 투명하게
-                                    border: Border.all(color: Colors.white, width: 1), // 테두리 두께를 1.5에서 1로 줄임
-                                  ),
-                                  child: Icon(
-                                    Icons.flash_off,
-                                    color: Colors.white,
-                                    size: 12, // 크기 유지
-                                  ),
-                                ),
-                              ),
-                              Center(
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 10), // 위쪽 패딩 추가
-                                  child: Icon(
-                                    Icons.keyboard_arrow_up, // arrow_upward에서 keyboard_arrow_up으로 변경
-                                    color: Colors.white,
-                                    size: 24, // 크기를 30에서 24로 줄임
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: 25,
-                                top: 27, // 20에서 24로 변경하여 아래로 내림
-                                child: Image.asset(
-                                  'assets/images/Live.png',
-                                  height: 16, // 20에서 16으로 줄임
-                                ),
-                              ),
-                              Positioned(
-                                top: 10,
-                                right: 88, // 중앙에서 살짝 오른쪽으로 이동
-                                child: Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 252, // onboardingphone 이미지 너비에 맞춤
-                          height: MediaQuery.of(context).size.height * 0.54,
-                          child: Stack(
-                            children: [
-                              Image.asset(
-                                'assets/images/cameraeximg.png',
-                                fit: BoxFit.cover, // fill에서 cover로 변경
-                                width: 252, // 너비를 명시적으로 지정
-                                height: double.infinity,
-                              ),
-                              Positioned(
-                                bottom: 25, // 20에서 25로 변경하여 전체적으로 위로 올림
-                                left: 0,
-                                right: 0,
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        buildZoomOption('.5', 20), // 크기를 30에서 25로 줄임
-                                        SizedBox(width: 15),
-                                        buildZoomOption('1x', 27), // 크기 유지
-                                        SizedBox(width: 15),
-                                        buildZoomOption('3', 20), // 크기를 30에서 25로 줄임
-                                      ],
-                                    ),
-                                    SizedBox(height: 12), // 10에서 12로 변경하여 간격 조절
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        buildCameraOption('슬로 모션', false),
-                                        buildCameraOption('비디오', false),
-                                        buildCameraOption('사진', true),
-                                        buildCameraOption('인물 사진', false),
-                                        buildCameraOption('파노라마', false),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Positioned(
-                                bottom: MediaQuery.of(context).size.height * 0.15, // 0.2에서 0.18로 변경
-                                right: 50, // 60에서 55로 변경
-                                child: Image.asset(
-                                  'assets/images/focus.png',
-                                  width: 80, // 이미지 크기 조정
-                                  height: 80,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    top: screenHeight * 0.02,
+                    child: buildCameraUI(screenWidth, screenHeight),
                   ),
                 if (index == 0 || index == 2)
                   Positioned(
-                    top: MediaQuery.of(context).size.height * 0.169,
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'assets/images/waitingimg.gif',
-                          width: 210,
-                          height: 210,
-                          fit: BoxFit.contain,
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          index == 2
-                              ? '콘니치아 보다 곤니찌와로\n발음하는 것이 좋을 것 같아요!'
-                              : '환영합니다.\n무엇을 도와드릴까요?',
-                          style: TextStyle(
-                            color: Color(0xFF007AFF),
-                            fontSize: 16, // 18에서 16으로 줄임
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                    top: screenHeight * 0.2,
+                    child: buildWaitingUI(screenWidth, screenHeight, index),
                   ),
-                if (index == 3) // 4번째 페이지에 진도율 그래프 추가
+                if (index == 3)
                   Positioned(
-                    top: 150, // Unowe 글자 아래로 위치 조정
-                    left: 40,
-                    right: 40,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          '2024년 10월 1일',
-                          style: TextStyle(
-                            color: Color(0xFF007AFF),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Stack(
-                          children: [
-                            Container(
-                              height: 10,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5),
-                                child: LinearProgressIndicator(
-                                  value: 0.8,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              top: 0,
-                              bottom: 0,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 50,
-                                    child: Container(),
-                                  ),
-                                  Container(
-                                    width: 2,
-                                    color: Colors.white,
-                                  ),
-                                  Expanded(
-                                    flex: 50,
-                                    child: Container(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              left: 0,
-                              bottom: -20,
-                              child: Text(
-                                '0%',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: -20,
-                              child: Text(
-                                '80%',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    top: screenHeight * 0.25,
+                    left: screenWidth * 0.1,
+                    right: screenWidth * 0.1,
+                    child: buildProgressUI(screenWidth, screenHeight),
                   ),
               ],
             ),
@@ -350,24 +144,224 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget buildDot(int index) {
-    return Container(
-      height: 10,
-      width: 10,
-      margin: EdgeInsets.only(right: 5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _currentPage == index ? Colors.blue : Colors.grey,
-      ),
+  Widget buildCameraUI(double screenWidth, double screenHeight) {
+    return Column(
+      children: [
+        Container(
+          width: screenWidth * 0.7152,
+          height: screenHeight * 0.07,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(screenWidth * 0.105),
+              topRight: Radius.circular(screenWidth * 0.105),
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: screenWidth * 0.05,
+                top: screenHeight * 0.031,
+                child: Container(
+                  width: screenWidth * 0.04,
+                  height: screenWidth * 0.04,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.white, width: 1),
+                  ),
+                  child: Icon(
+                    Icons.flash_off,
+                    color: Colors.white,
+                    size: screenWidth * 0.03,
+                  ),
+                ),
+              ),
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: screenHeight * 0.01),
+                  child: Icon(
+                    Icons.keyboard_arrow_up,
+                    color: Colors.white,
+                    size: screenWidth * 0.06,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: screenWidth * 0.05,
+                top: screenHeight * 0.035,
+                child: Image.asset(
+                  'assets/images/Live.png',
+                  height: screenHeight * 0.02,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: screenWidth * 0.7152,
+          height: screenHeight * 0.53,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                'assets/images/cameraeximg.png',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+              Positioned(
+                bottom: screenHeight * 0.03,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        buildZoomOption('.5', screenWidth * 0.05, screenHeight),
+                        SizedBox(width: screenWidth * 0.04),
+                        buildZoomOption('1x', screenWidth * 0.07, screenHeight),
+                        SizedBox(width: screenWidth * 0.04),
+                        buildZoomOption('3', screenWidth * 0.05, screenHeight),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.015),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        buildCameraOption('슬로 모션', false, screenWidth),
+                        buildCameraOption('비디오', false, screenWidth),
+                        buildCameraOption('사진', true, screenWidth),
+                        buildCameraOption('인물 사진', false, screenWidth),
+                        buildCameraOption('파노라마', false, screenWidth),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: screenHeight * 0.15,
+                right: screenWidth * 0.1,
+                child: Image.asset(
+                  'assets/images/focus.png',
+                  width: screenWidth * 0.2,
+                  height: screenWidth * 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget buildBottomButtons() {
+  Widget buildWaitingUI(double screenWidth, double screenHeight, int index) {
+    return Column(
+      children: [
+        Image.asset(
+          'assets/images/waitingimg.gif',
+          width: screenWidth * 0.6,
+          height: screenWidth * 0.6,
+          fit: BoxFit.contain,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        Text(
+          index == 2
+              ? '콘니치아 보다 곤니찌와로\n발음하는 것이 좋을 것 같아요!'
+              : '환영합니다.\n무엇을 도와드릴까요?',
+          style: TextStyle(
+            color: Color(0xFF007AFF),
+            fontSize: screenWidth * 0.04,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget buildProgressUI(double screenWidth, double screenHeight) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          '2024년 10월 1일',
+          style: TextStyle(
+            color: Color(0xFF007AFF),
+            fontSize: screenWidth * 0.04,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.02),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: screenWidth * 0.8,
+              height: screenHeight * 0.015,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(screenHeight * 0.0075),
+                child: LinearProgressIndicator(
+                  value: 0.8,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+            ),
+            Container(
+              width: 2,
+              height: screenHeight * 0.015,
+              color: Colors.white,
+            ),
+            Positioned(
+              left: 0,
+              bottom: -screenHeight * 0.025,
+              child: Text(
+                '0%',
+                style: TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: screenWidth * 0.03,
+                ),
+              ),
+            ),
+            Positioned(
+              left: screenWidth * 0.8 * 0.8, // 80%의 위치
+              bottom: -screenHeight * 0.025,
+              child: Text(
+                '80%',
+                style: TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: screenWidth * 0.03,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: screenHeight * 0.1),
+        Text(
+          '오늘의 학습 진도율은 80% 입니다.\n오늘 하루 수고하셨습니다',
+          style: TextStyle(
+            color: Color(0xFF007AFF),
+            fontSize: screenWidth * 0.04,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget buildBottomButtons(BoxConstraints constraints) {
+    double screenWidth = constraints.maxWidth;
+    double screenHeight = constraints.maxHeight;
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.05,
+        vertical: screenHeight * 0.02,
+      ),
       decoration: BoxDecoration(
         color: Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(screenWidth * 0.04)),
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
@@ -385,9 +379,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.04),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.08,
+                    vertical: screenHeight * 0.015,
+                  ),
                 ),
               ),
             )
@@ -400,11 +397,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     'SKIP',
                     style: TextStyle(
                       color: Colors.blue,
-                      fontSize: 16,
+                      fontSize: screenWidth * 0.04,
                     ),
                   ),
                 ),
-                SizedBox(width: 100),
+                SizedBox(width: screenWidth * 0.25),
                 ElevatedButton(
                   onPressed: () {
                     _pageController.nextPage(
@@ -417,9 +414,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.04),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.08,
+                      vertical: screenHeight * 0.01,
+                    ),
                   ),
                 ),
               ],
@@ -427,31 +427,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget buildCameraOption(String text, bool isSelected) {
+  Widget buildDot(int index) {
+    return Container(
+      height: 10,
+      width: 10,
+      margin: EdgeInsets.only(right: 5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _currentPage == index ? Colors.blue : Colors.grey,
+      ),
+    );
+  }
+
+  Widget buildCameraOption(String text, bool isSelected, double screenWidth) {
     return Text(
       text,
       style: TextStyle(
         color: isSelected ? Colors.yellow : Colors.white,
-        fontSize: 10,
+        fontSize: screenWidth * 0.025,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
     );
   }
 
-  Widget buildZoomOption(String text, double size) {
+  Widget buildZoomOption(String text, double size, double screenHeight) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.black.withOpacity(0.3), // 0.5에서 0.3으로 변경하여 더 투명하게 만듦
+        color: Colors.black.withOpacity(0.3),
       ),
       child: Center(
         child: Text(
           text,
           style: TextStyle(
             color: Colors.white,
-            fontSize: size == 27 ? 12 : 10, // 1x는 글자 크기 유지, 나머지는 작게
+            fontSize: size == screenHeight * 0.07 ? size * 0.4 : size * 0.5,
             fontWeight: FontWeight.bold,
           ),
         ),
