@@ -9,6 +9,9 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
+import 'package:camera/camera.dart';
+
+List<CameraDescription> cameras = [];
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +21,7 @@ void main() async {
   } catch (e) {
     print('Error loading .env file: $e');
   }
+  cameras = await availableCameras();
   runApp(MyApp());
 }
 
@@ -69,252 +73,44 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isListening = false;
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
-  final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> _qaList = [];
-
-  // 발음 평가 결과를 저장할 변수 추가
   String _pronunciationScore = "";
 
   @override
   void initState() {
     super.initState();
-    print('HomeScreen 초기화');
-    _requestMicrophonePermission(); // 마이크 권한 요청
+    _requestPermissions();
     _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
   }
 
+  void _requestPermissions() async {
+    var microphoneStatus = await Permission.microphone.status;
+    var cameraStatus = await Permission.camera.status;
 
-  void _requestMicrophonePermission() async {
-    var status = await Permission.microphone.status;
-    if (!status.isGranted) {
-      if (await Permission.microphone.request().isGranted) {
+    if (!microphoneStatus.isGranted || !cameraStatus.isGranted) {
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.microphone,
+        Permission.camera,
+      ].request();
+
+      if (statuses[Permission.microphone]!.isGranted) {
         print('마이크 권한 허용됨');
       } else {
         print('마이크 권한 거부됨');
       }
+
+      if (statuses[Permission.camera]!.isGranted) {
+        print('카메라 권한 허용됨');
+      } else {
+        print('카메라 권한 거부됨');
+      }
     } else {
-      print('마이크 권한 이미 허용됨');
+      print('마이크 및 카메라 권한 이미 허용됨');
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    _speak(_getTabName(index));
-  }
-
-  String _getTabName(int index) {
-    switch (index) {
-      case 0:
-        return "홈";
-      case 1:
-        return "검색";
-      case 2:
-        return "프로필";
-      default:
-        return "";
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print('HomeScreen 빌드 시작');
-    List<Widget> _pages = <Widget>[
-      _buildHome(), // 홈 화면
-      _buildSearch(), // 검색 화면
-      _buildProfile(), // 프로필 화면
-    ];
-
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('일본어 학습 AI'),
-        backgroundColor: Colors.black,
-      ),
-      body: Column(
-        children: [
-          Expanded(child: _pages[_selectedIndex]), // 선택된 페이지 표시
-          if (_pronunciationScore.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                _pronunciationScore,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-
-
-  Widget _buildHome() {
-    return GestureDetector(
-      onDoubleTap: () => _speak(),
-      onLongPressStart: (_) {
-        setState(() {
-          _backgroundColor = Colors.white;
-          _text = "음성인식 중입니다.";
-        });
-        _listen();
-      },
-      onLongPressEnd: (_) {
-        setState(() {
-          _backgroundColor = Colors.white;
-        });
-        _stopListening();
-      },
-      onTap: () {
-        try {
-          _stopTTS();
-        } catch (e) {
-          print('Error stopping TTS: $e');
-        }
-      },
-      child: Stack(
-        children: [
-          AnimatedContainer(
-            duration: Duration(milliseconds: 100),
-            color: _backgroundColor, // 배경색을 검은색으로 설정
-            child: Center(
-              child: Icon(
-                Icons.mic, // 음성 인식에 반응하는 아이콘
-                size: 100,
-                color: _isListening ? Colors.green : Colors.red, // 음성 인식 중일 때 색상 변경
-              ),
-            ),
-          ),
-          Positioned(
-            top: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                'Unowe',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                _text,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearch() {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            padding: EdgeInsets.all(16.0),
-            children: [
-              Text(
-                'GPT에게 질문하세요:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '질문 입력',
-                ),
-              ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _sendQuestion,
-                child: Text('질문 보내기'),
-              ),
-              SizedBox(height: 20),
-              ..._qaList.map((qa) => _buildCard(qa['question']!, qa['answer']!)).toList(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfile() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-          ),
-          SizedBox(height: 10),
-          Text(
-            'UnoweTeam',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'unoweteam@gmail.com',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCard(String question, String answer) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '질문: $question',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              '답변: $answer',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future _speak([String? text]) async {
+  Future _speak(String text) async {
     await flutterTts.setLanguage("ko-KR");
-    await flutterTts.speak(text ?? _text);
+    await flutterTts.speak(text);
   }
 
   Future _stopTTS() async {
@@ -378,34 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (response.statusCode == 200) {
       final answer = jsonDecode(response.body)['answer'];
       setState(() {
-        _qaList.add({'question': question, 'answer': answer});
-        _text = answer;
-      });
-      _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
-    } else {
-      _speak('질문에 대한 답변을 가져오지 못했습니다');
-    }
-  }
-
-  Future _sendQuestion() async {
-    final question = _controller.text;
-    if (question.isEmpty) return;
-
-    print('Sending question: $question');
-    final response = await http.post(
-      Uri.parse('http://110.15.29.199:7654/answer'), // 변경된 URL
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'question': question,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final answer = jsonDecode(response.body)['answer'];
-      setState(() {
-        _qaList.add({'question': question, 'answer': answer});
         _text = answer;
       });
       _speak(answer); // 답변이 오면 바로 TTS로 읽어줌
@@ -444,5 +212,252 @@ class _HomeScreenState extends State<HomeScreen> {
     // 여기에 음성 데이터를 가져오는 로직을 추가하세요
     // 예를 들어, 로컬 파일에서 음성 데이터를 읽어올 수 있습니다.
     return [];
+  }
+
+  void _openCamera() {
+    _speak("카메라");
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CameraScreen()),
+    );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+      _speak("홈");
+    } else {
+      _openCamera();
+    }
+  }
+
+  Widget _buildHome() {
+    return GestureDetector(
+      onDoubleTap: () => _speak,
+      onLongPressStart: (_) {
+        setState(() {
+          _backgroundColor = Colors.white;
+          _text = "음성인식 중입니다.";
+          _speak("음성인식 중입니다.");
+        });
+        _listen();
+      },
+      onLongPressEnd: (_) {
+        setState(() {
+          _backgroundColor = Colors.white;
+        });
+        _stopListening();
+      },
+      onTap: () {
+        try {
+          _stopTTS();
+        } catch (e) {
+          print('Error stopping TTS: $e');
+        }
+      },
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! < 0) {
+          _openCamera();
+        }
+      },
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: Duration(milliseconds: 100),
+            color: _backgroundColor,
+            child: Center(
+              child: Icon(
+                Icons.mic,
+                size: 100,
+                color: _isListening ? Colors.green : Colors.red,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'Unowe',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                _text,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('일본어 학습 AI'),
+        backgroundColor: Colors.black,
+      ),
+      body: Column(
+        children: [
+          Expanded(child: _buildHome()),
+          if (_pronunciationScore.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                _pronunciationScore,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera),
+            label: 'Camera',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class CameraScreen extends StatefulWidget {
+  @override
+  _CameraScreenState createState() => _CameraScreenState();
+}
+
+class _CameraScreenState extends State<CameraScreen> {
+  late CameraController _controller;
+  late Future<void> _initializeControllerFuture;
+  FlutterTts flutterTts = FlutterTts();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      _controller = CameraController(
+        cameras[0],
+        ResolutionPreset.high,
+      );
+      _initializeControllerFuture = _controller.initialize();
+      await _initializeControllerFuture;
+    } catch (e) {
+      print('카메라 초기화 오류: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendPictureToGoogleVision(XFile image) async {
+    final bytes = await image.readAsBytes();
+    final base64Image = base64Encode(bytes);
+
+    final apiKey = dotenv.env['GOOGLE_VISION_API_KEY'];
+    final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'requests': [
+          {
+            'image': {'content': base64Image},
+            'features': [
+              {'type': 'LABEL_DETECTION', 'maxResults': 10},
+            ],
+          },
+        ],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+      print('Google Vision API 응답: $responseBody');
+
+      final labels = responseBody['responses'][0]['labelAnnotations']
+          .map((label) => label['description'])
+          .join(', ');
+
+      _speak('이미지 분석 결과는 다음과 같습니다: $labels');
+    } else {
+      print('Google Vision API 요청 실패');
+      print('응답 코드: ${response.statusCode}');
+      print('응답 메시지: ${response.body}');
+      _speak('이미지 분석에 실패했습니다.');
+    }
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      await _initializeControllerFuture;
+      final image = await _controller.takePicture();
+      if (!mounted) return;
+
+      await _sendPictureToGoogleVision(image);
+    } catch (e) {
+      print('사진 촬영 오류: $e');
+    }
+  }
+
+  Future _speak(String text) async {
+    await flutterTts.setLanguage("ko-KR");
+    await flutterTts.speak(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('카메라')),
+      body: GestureDetector(
+        onLongPress: () async {
+          await _takePicture();
+        },
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity! > 0) {
+            _speak("홈");
+            Navigator.pop(context);
+          }
+        },
+        child: FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(_controller);
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
+      ),
+    );
   }
 }
