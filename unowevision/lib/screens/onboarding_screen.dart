@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 if (index == 0 || index == 2)
                   Positioned(
-                    top: screenHeight * 0.2,
+                    top: screenHeight * 0.17,
                     child: buildWaitingUI(screenWidth, screenHeight, index),
                   ),
                 if (index == 3)
@@ -157,7 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       children: [
         Container(
           width: screenWidth * 0.7152,
-          height: screenHeight * 0.07,
+          height: screenHeight * 0.08,
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.only(
