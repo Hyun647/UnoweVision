@@ -1,0 +1,30 @@
+name: unowevision
+description: A new Flutter project.
+
+publish_to: 'none' # 이 프로젝트가 공개되지 않도록 설정
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"  # Dart SDK 버전을 2.17.0 이상으로 설정하여 패키지 호환성 해결
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.10.0+1
+  speech_to_text: ^7.0.0  # null safety 지원되는 최신 버전으로 변경ㅏ
+  provider: ^6.0.0  # 최신 호환 가능한 버전 유지
+  http: ^1.2.0  # 호환 가능한 최신 버전 사용
+  flutter_dotenv: ^5.0.2  # 최신 버전 유지
+  google_speech: ^5.3.0  # 호환 가능한 최신 버전 유지
+  cupertino_icons: ^1.0.2  # 최신 버전 유지
+  flutter_tts: ^4.0.2  # flutter_tts 패키지 추가
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0  # 최신 lint 버전 유지
+
+flutter:
+  uses-material-design: true
