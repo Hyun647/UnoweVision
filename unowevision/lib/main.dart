@@ -7,8 +7,8 @@ import 'package:google_speech/google_speech.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/onboarding_screen.dart';
 
 List<CameraDescription> cameras = [];
 
@@ -27,6 +27,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('MyApp 빌드 시작');
     return MaterialApp(
       title: '일본어 학습 AI',
       theme: ThemeData(
@@ -34,49 +35,28 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: FutureBuilder<bool>(
-        future: _checkIfFirstRun(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.data == true) {
-              return OnboardingScreen();
-            } else {
-              return HomeScreen();
-            }
-          } else {
+        future: _checkOnboardingCompleted(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
+          } else {
+            if (snapshot.data == true) {
+              return HomeScreen();
+            } else {
+              return OnboardingScreen();
+            }
           }
         },
       ),
+      routes: {
+        '/home': (context) => HomeScreen(),
+      },
     );
   }
 
-  Future<bool> _checkIfFirstRun() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isFirstRun = prefs.getBool('isFirstRun') ?? true;
-    if (isFirstRun) {
-      prefs.setBool('isFirstRun', false);
-    }
-    return isFirstRun;
-  }
-}
-
-class OnboardingScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('옴보딩')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          },
-          child: Text('시작하기'),
-        ),
-      ),
-    );
+  Future<bool> _checkOnboardingCompleted() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('onboardingCompleted') ?? false;
   }
 }
 
