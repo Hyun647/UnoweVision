@@ -157,7 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       children: [
         Container(
           width: screenWidth * 0.7152,
-          height: screenHeight * 0.07,
+          height: screenHeight * 0.08,
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.only(
