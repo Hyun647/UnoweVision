@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<CameraDescription> cameras = [];
 
@@ -32,7 +33,49 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HomeScreen(),
+      home: FutureBuilder<bool>(
+        future: _checkIfFirstRun(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.data == true) {
+              return OnboardingScreen();
+            } else {
+              return HomeScreen();
+            }
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
+      ),
+    );
+  }
+
+  Future<bool> _checkIfFirstRun() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstRun = prefs.getBool('isFirstRun') ?? true;
+    if (isFirstRun) {
+      prefs.setBool('isFirstRun', false);
+    }
+    return isFirstRun;
+  }
+}
+
+class OnboardingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('옴보딩')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          },
+          child: Text('시작하기'),
+        ),
+      ),
     );
   }
 }
@@ -140,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = 'api키 입력';
+    final apiKey = 'GPT API키';
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -173,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
-    final apiKey = 'AIzaSyAw0TRhRWxqy3QxPSyq3Vufi5KDorPRCxo';
+    final apiKey = '구글 api키';
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
@@ -381,7 +424,7 @@ class _CameraScreenState extends State<CameraScreen> {
     final bytes = await image.readAsBytes();
     final base64Image = base64Encode(bytes);
 
-    final apiKey = 'api 입력'; // Google Vision API 키
+    final apiKey = '구글 api키'; // Google Vision API 키
     final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
 
     final response = await http.post(
