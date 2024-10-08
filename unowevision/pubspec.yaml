@@ -11,8 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.10.0+1
-  speech_to_text: ^7.0.0  # null safety 지원되는 최신 버전으로 변경ㅏ
+  speech_to_text: ^7.0.0  # null safety 지원되는 최신 버전으로 변경
   provider: ^6.0.0  # 최신 호환 가능한 버전 유지
   http: ^1.2.0  # 호환 가능한 최신 버전 사용
   flutter_dotenv: ^5.0.2  # 최신 버전 유지
@@ -20,6 +19,16 @@ dependencies:
   cupertino_icons: ^1.0.2  # 최신 버전 유지
   flutter_tts: ^4.0.2  # flutter_tts 패키지 추가
   permission_handler: ^11.3.1
+  lottie: ^2.3.2  # 최신 버전을 사용하세요
+  shared_preferences: ^2.2.2
+  camera: ^0.10.6
+  camera_android: ^0.10.9+11
+  camera_avfoundation: ^0.9.17+3
+  camera_platform_interface: ^2.8.0
+  camera_web: ^0.3.5
+  cross_file: ^0.3.4+2
+  flutter_plugin_android_lifecycle: ^2.0.22
+  stream_transform: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -28,3 +37,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/onboardingphone.png
+    - assets/images/waitingimg.gif
+    - assets/images/cameraeximg.png
+    - assets/images/arrow.png
+    - assets/images/Live.png
+    - assets/images/focus.png
