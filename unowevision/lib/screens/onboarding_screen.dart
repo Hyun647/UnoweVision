@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 if (index == 0 || index == 2)
                   Positioned(
-                    top: screenHeight * 0.2,
+                    top: screenHeight * 0.17,
                     child: buildWaitingUI(screenWidth, screenHeight, index),
                   ),
                 if (index == 3)
