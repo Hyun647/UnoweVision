@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = 'GPT API키';
+    final apiKey = 'GPT API 키';
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
-    final apiKey = '구글 api키';
+    final apiKey = '구글 API 키';
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
