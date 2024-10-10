@@ -458,6 +458,12 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture; // 초기화 완료 대기
+      
+      // 사진 촬영 시 진동 추가
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 100); // 0.1초(100ms) 동안 진동
+      }
+      
       final image = await _controller.takePicture();
       if (!mounted) return;
 
@@ -477,6 +483,11 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('카메라')),
       body: GestureDetector(
+        onTap: () async {
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate(duration: 100); // 100ms 동안 진동
+          }
+        },
         onLongPress: () async {
           await _takePicture();
         },
