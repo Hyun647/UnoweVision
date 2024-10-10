@@ -264,7 +264,6 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _backgroundColor = Colors.white;
           _text = "음성인식 중입니다.";
-          _speak("음성인식 중입니다.");
         });
         _listen();
       },
