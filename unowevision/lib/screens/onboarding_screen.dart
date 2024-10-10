@@ -43,6 +43,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(0),
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+      ),
       backgroundColor: Color(0xFFFAFAFA),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -56,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) => buildPageContent(_pages[index], index, constraints),
               ),
               Positioned(
-                top: constraints.maxHeight * 0.1,
+                top: constraints.maxHeight * 0.05,
                 left: 0,
                 right: 0,
                 child: Row(
