@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  vibration: ^1.7.4  # 최신 버전으로 업데이트하세요
+  vibration: ^1.7.6  # 최신 버전으로 업데이트하세요
   # ... 다른 의존성 ...
   speech_to_text: ^7.0.0  # null safety 지원되는 최신 버전으로 변경
   provider: ^6.0.0  # 최신 호환 가능한 버전 유지
