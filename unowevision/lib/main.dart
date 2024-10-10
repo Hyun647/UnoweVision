@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
+import 'package:vibration/vibration.dart';
 
 List<CameraDescription> cameras = [];
 
@@ -126,6 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
         onError: (error) => print('onError: $error'),
       );
       if (available) {
+        // 진동 추가
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(duration: 100); // 100ms 동안 진동
+        }
+
         setState(() {
           _isListening = true;
           _text = "음성인식 중입니다.";
@@ -163,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = 'GPT API키';
+    final apiKey = '지피지피자파자파api';
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -196,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
-    final apiKey = '구글 api키';
+    final apiKey = '구글 api';
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
@@ -404,7 +410,7 @@ class _CameraScreenState extends State<CameraScreen> {
     final bytes = await image.readAsBytes();
     final base64Image = base64Encode(bytes);
 
-    final apiKey = '구글 api키'; // Google Vision API 키
+    final apiKey = '구글 api'; // Google Vision API 키
     final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
 
     final response = await http.post(
