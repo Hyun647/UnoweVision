@@ -4,17 +4,30 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_speech/google_speech.dart';
-import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
+<<<<<<< HEAD
 import 'package:vibration/vibration.dart';
+=======
+import 'package:flutter/services.dart';
+>>>>>>> bb22fceca207e6011f3eeccffa982c0fbab4c222
 
 List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 전체 화면 모드 설정
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // 상태바와 네비게이션 바를 투명하게 설정
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+  ));
+
   try {
     print('환경 변수 로드 성공');
   } catch (e) {
@@ -169,7 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
+<<<<<<< HEAD
     final apiKey = '지피지피자파자파api';
+=======
+    final apiKey = 'GPT API 키';
+>>>>>>> bb22fceca207e6011f3eeccffa982c0fbab4c222
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -202,7 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
+<<<<<<< HEAD
     final apiKey = '구글 api';
+=======
+    final apiKey = '구글 api 키';
+>>>>>>> bb22fceca207e6011f3eeccffa982c0fbab4c222
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
@@ -335,22 +356,26 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text('일본어 학습 AI'),
-        backgroundColor: Colors.black,
       ),
-      body: Column(
-        children: [
-          Expanded(child: _pages[_selectedIndex]),
-          if (_pronunciationScore.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                _pronunciationScore,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: _pages[_selectedIndex]),
+            if (_pronunciationScore.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _pronunciationScore,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -410,7 +435,11 @@ class _CameraScreenState extends State<CameraScreen> {
     final bytes = await image.readAsBytes();
     final base64Image = base64Encode(bytes);
 
+<<<<<<< HEAD
     final apiKey = '구글 api'; // Google Vision API 키
+=======
+    final apiKey = '구글 api 키'; // Google Vision API 키
+>>>>>>> bb22fceca207e6011f3eeccffa982c0fbab4c222
     final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
 
     final response = await http.post(
