@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = '지피지피자파자파api';
+    final apiKey = 'GPT API 키';
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
-    final apiKey = '구글 api 키';
+    final apiKey = '구글 API 키';
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
@@ -417,7 +417,7 @@ class _CameraScreenState extends State<CameraScreen> {
     final bytes = await image.readAsBytes();
     final base64Image = base64Encode(bytes);
 
-    final apiKey = '구글 api 키'; // Google Vision API 키
+    final apiKey = '구글 API 키'; // Google Vision API 키
     final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
 
     final response = await http.post(
