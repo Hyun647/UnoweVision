@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> _qaList = [];
+  List<Map<String, String>> _qaList = []; // 대화 히스토리 저장
   String _pronunciationScore = "";
 
   @override
@@ -174,6 +174,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
     final apiKey = 'GPT API 키';
+
+    // 대화 히스토리를 포함하여 메시지 생성
+    List<Map<String, String>> messages = [
+      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.'},
+    ];
+
+    // 기존 대화 히스토리를 추가
+    for (var qa in _qaList) {
+      messages.add({'role': 'user', 'content': qa['question']!});
+      messages.add({'role': 'assistant', 'content': qa['answer']!});
+    }
+
+    // 현재 질문 추가
+    messages.add({'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'});
+
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -182,10 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       body: jsonEncode({
         'model': 'gpt-4',
-        'messages': [
-          {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.'},
-          {'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'}
-        ],
+        'messages': messages,
         'temperature': 0.7,
       }),
     );
@@ -194,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final decodedResponse = utf8.decode(response.bodyBytes);
       final answer = jsonDecode(decodedResponse)['choices'][0]['message']['content'].trim();
       setState(() {
-        _qaList.add({'question': question, 'answer': answer});
+        _qaList.add({'question': question, 'answer': answer}); // 대화 히스토리에 추가
         _text = answer;
       });
       _speak(answer);
