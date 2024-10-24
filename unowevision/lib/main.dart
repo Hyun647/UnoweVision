@@ -276,12 +276,14 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _backgroundColor = Colors.white;
           _text = "음성인식 중입니다.";
+          _isListening = true; // 마이크 아이콘을 초록색으로 변경
         });
         _listen();
       },
       onLongPressEnd: (_) {
         setState(() {
           _backgroundColor = Colors.white;
+          _isListening = false; // 마이크 아이콘을 빨간색으로 변경
         });
         _stopListening();
       },
