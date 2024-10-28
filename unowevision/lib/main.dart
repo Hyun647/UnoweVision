@@ -118,6 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _listen() async {
     try {
+      // TTS 중지
+      await _stopTTS();
+
       bool available = await speech.initialize(
         onStatus: (status) => print('onStatus: $status'),
         onError: (error) => print('onError: $error'),
@@ -162,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final apiKey = '';
     // 대화 히스토리를 포함하여 메시지 생성
     List<Map<String, String>> messages = [
-      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. 당신의 이름은 노이(Noi)입니다. 답변은 최대한 간결하게 ��주세요. 답변에 ()괄호를 넣지 마시오.'},
+      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. 당신의 이름은 노이(Noi)입니다. 답변은 최대한 간결하게 해주세요. 답변에 ()괄호를 넣지 마시오.'},
     ];
 
     // 기존 대화 히스토리를 추가
@@ -253,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _backgroundColor = Colors.white;
           _text = "음성인식 중입니다.";
-          _isListening = true; // 마이크 아�����을 초록색으로 변경
+          _isListening = true; // 마이크 아이콘을 초록색으로 변경
         });
         _listen();
       },
