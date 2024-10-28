@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _requestPermissions();
-    _speak("유노이 비전에 오신 것을 환영합니다. 화면을 눌러 대화를 시작해보세요.");
+    _speak("유노이 비전에 오신 것을 환영합니다. 화면을 꾹 눌러 대화를 시작해보세요.");
   }
 
 
@@ -270,6 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         try {
           _stopTTS();
+          _speak("화면을 꾹 눌러주세요.");
         } catch (e) {
           print('Error stopping TTS: $e');
         }
