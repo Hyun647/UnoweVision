@@ -228,14 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return [];
   }
 
-  void _openCamera() {
-    _speak("카메라");
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => CameraScreen()),
-    // ); // 이 부분을 제거합니다.
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -277,11 +269,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _stopTTS();
         } catch (e) {
           print('Error stopping TTS: $e');
-        }
-      },
-      onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity! < 0) {
-          _openCamera();
         }
       },
       child: Stack(
