@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     print('MyApp 빌드 시작');
     return MaterialApp(
-      title: '일본어 학습 AI',
+      title: 'UnoweVision',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _requestPermissions();
-    _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
+    _speak("유노이 비전에 오신 것을 환영합니다. 화면을 눌러 대화를 시작해보세요.");
   }
 
 
@@ -159,10 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = 'gpt api';
+    final apiKey = '';
     // 대화 히스토리를 포함하여 메시지 생성
     List<Map<String, String>> messages = [
-      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오. 당신의 이름은 노이(Noi)입니다. 답변은 최대한 간결하게 해주세요.'},
+      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. 당신의 이름은 노이(Noi)입니다. 답변은 최대한 간결하게 ��주세요. 답변에 ()괄호를 넣지 마시오.'},
     ];
 
     // 기존 대화 히스토리를 추가
@@ -253,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _backgroundColor = Colors.white;
           _text = "음성인식 중입니다.";
-          _isListening = true; // 마이크 아이콘을 초록색으로 변경
+          _isListening = true; // 마이크 아�����을 초록색으로 변경
         });
         _listen();
       },
@@ -313,7 +313,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfile() {
-    return Center(child: Text("프로필 화면"));
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: AssetImage('assets/images/teamlogo.png'),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "UnoweTeam",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "이메일 : unoweteam@gmail.com",
+            style: TextStyle(fontSize: 18),
+          ),
+          // 추가적인 프로필 정보나 위젯을 여기에 추가할 수 있습니다.
+        ],
+      ),
+    );
   }
 
   @override
@@ -328,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('일본어 학습 AI'),
+        title: Text('UnoweVision'),
       ),
       body: SafeArea(
         child: Column(
