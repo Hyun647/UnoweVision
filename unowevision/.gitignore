@@ -27,16 +27,9 @@ migrate_working_dir/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-.packages
 .pub-cache/
 .pub/
-build/
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Flutter/engine/
-ios/Flutter/flutter_assets/
-ios/ServiceDefinitions.json
-ios/Runner/GeneratedPluginRegistrant.*
+/build/
 
 # Symbolication related
 app.*.symbols
@@ -49,5 +42,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Service account key file
-path/to/your/service-account.json
+# 환경 변수 파일 제외
+.env

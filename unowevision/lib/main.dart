@@ -5,12 +5,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_speech/google_speech.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:camera/camera.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
 import 'package:flutter/services.dart';
-
-List<CameraDescription> cameras = [];
+import 'package:vibration/vibration.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +28,6 @@ Future<void> main() async {
     print('Error loading .env file: $e');
   }
 
-  cameras = await availableCameras();
   runApp(MyApp());
 }
 
@@ -39,7 +36,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     print('MyApp 빌드 시작');
     return MaterialApp(
-      title: '일본어 학습 AI',
+      title: 'UnoweVision',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -83,40 +80,30 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _backgroundColor = Colors.white;
   int _selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> _qaList = [];
+  List<Map<String, String>> _qaList = []; // 대화 히스토리 저장
   String _pronunciationScore = "";
 
   @override
   void initState() {
     super.initState();
     _requestPermissions();
-    _speak("일본어 학습 AI 앱에 오신 것을 환영합니다. 무엇을 도와드릴까요?");
+    _speak("유노이 비전에 오신 것을 환영합니다. 화면을 눌러 대화를 시작해보세요.");
   }
 
 
   void _requestPermissions() async {
     var microphoneStatus = await Permission.microphone.status;
-    var cameraStatus = await Permission.camera.status;
 
-    if (!microphoneStatus.isGranted || !cameraStatus.isGranted) {
-      Map<Permission, PermissionStatus> statuses = await [
-        Permission.microphone,
-        Permission.camera,
-      ].request();
+    if (!microphoneStatus.isGranted) {
+      PermissionStatus status = await Permission.microphone.request();
 
-      if (statuses[Permission.microphone]!.isGranted) {
+      if (status.isGranted) {
         print('마이크 권한 허용됨');
       } else {
         print('마이크 권한 거부됨');
       }
-
-      if (statuses[Permission.camera]!.isGranted) {
-        print('카메라 권한 허용됨');
-      } else {
-        print('카메라 권한 거부됨');
-      }
     } else {
-      print('마이크 및 카메라 권한 이미 허용됨');
+      print('마이크 권한 이미 허용됨');
     }
   }
 
@@ -131,15 +118,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _listen() async {
     try {
+      // TTS 중지
+      await _stopTTS();
+
       bool available = await speech.initialize(
         onStatus: (status) => print('onStatus: $status'),
         onError: (error) => print('onError: $error'),
       );
       if (available) {
-        setState(() {
-          _isListening = true;
-          _text = "음성인식 중입니다.";
-        });
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(duration: 100); // 100ms 동안 진동
+        }
         speech.listen(
           onResult: (val) => setState(() {
             _text = val.recognizedWords;
@@ -173,7 +162,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _getAnswer(String question) async {
     print('Sending answer request: $question');
-    final apiKey = 'GPT API 키';
+    final apiKey = '';
+    // 대화 히스토리를 포함하여 메시지 생성
+    List<Map<String, String>> messages = [
+      {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. 당신의 이름은 노이(Noi)입니다. 답변은 최대한 간결하게 해주세요. 답변에 ()괄호를 넣지 마시오.'},
+    ];
+
+    // 기존 대화 히스토리를 추가
+    for (var qa in _qaList) {
+      messages.add({'role': 'user', 'content': qa['question']!});
+      messages.add({'role': 'assistant', 'content': qa['answer']!});
+    }
+
+    // 현재 질문 추가
+    messages.add({'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'});
+
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       headers: <String, String>{
@@ -181,11 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'Authorization': 'Bearer $apiKey',
       },
       body: jsonEncode({
-        'model': 'gpt-4',
-        'messages': [
-          {'role': 'system', 'content': '당신은 시각 장애인의 일본어 학습을 돕기 위해 설계된 AI입니다. TTS 출력에 적합한 형식으로 응답을 제공하십시오.'},
-          {'role': 'user', 'content': '다음 질문에 한국어로 답변해 주세요: $question'}
-        ],
+        'model': 'gpt-4o-mini',
+        'messages': messages,
         'temperature': 0.7,
       }),
     );
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final decodedResponse = utf8.decode(response.bodyBytes);
       final answer = jsonDecode(decodedResponse)['choices'][0]['message']['content'].trim();
       setState(() {
-        _qaList.add({'question': question, 'answer': answer});
+        _qaList.add({'question': question, 'answer': answer}); // 대화 히스토리에 추가
         _text = answer;
       });
       _speak(answer);
@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future _evaluatePronunciation(String text) async {
-    final apiKey = '구글 api 키';
+    final apiKey = '구글 API 키';
     final client = SpeechToText.viaApiKey(apiKey);
     final config = RecognitionConfig(
       encoding: AudioEncoding.LINEAR16,
@@ -229,14 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<int>> _getAudioContent() async {
     return [];
-  }
-
-  void _openCamera() {
-    _speak("카메라");
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CameraScreen()),
-    );
   }
 
   void _onItemTapped(int index) {
@@ -264,13 +256,14 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _backgroundColor = Colors.white;
           _text = "음성인식 중입니다.";
-          _speak("음성인식 중입니다.");
+          _isListening = true; // 마이크 아이콘을 초록색으로 변경
         });
         _listen();
       },
       onLongPressEnd: (_) {
         setState(() {
           _backgroundColor = Colors.white;
+          _isListening = false; // 마이크 아이콘을 빨간색으로 변경
         });
         _stopListening();
       },
@@ -279,11 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _stopTTS();
         } catch (e) {
           print('Error stopping TTS: $e');
-        }
-      },
-      onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity! < 0) {
-          _openCamera();
         }
       },
       child: Stack(
@@ -328,7 +316,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfile() {
-    return Center(child: Text("프로필 화면"));
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: AssetImage('assets/images/teamlogo.png'),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "UnoweTeam",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "이메일 : unoweteam@gmail.com",
+            style: TextStyle(fontSize: 18),
+          ),
+          // 추가적인 프로필 정보나 위젯을 여기에 추가할 수 있습니다.
+        ],
+      ),
+    );
   }
 
   @override
@@ -343,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('일본어 학습 AI'),
+        title: Text('UnoweVision'),
       ),
       body: SafeArea(
         child: Column(
@@ -374,128 +383,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
-      ),
-    );
-  }
-}
-
-class CameraScreen extends StatefulWidget {
-  @override
-  _CameraScreenState createState() => _CameraScreenState();
-}
-
-class _CameraScreenState extends State<CameraScreen> {
-  late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
-  FlutterTts flutterTts = FlutterTts();
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeCamera();
-  }
-
-  Future<void> _initializeCamera() async {
-    try {
-      _controller = CameraController(
-        cameras[0],
-        ResolutionPreset.high,
-      );
-      _initializeControllerFuture = _controller.initialize();
-      await _initializeControllerFuture; // 초기화 완료 대기
-    } catch (e) {
-      print('카메라 초기화 오류: $e');
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _sendPictureToGoogleVision(XFile image) async {
-    final bytes = await image.readAsBytes();
-    final base64Image = base64Encode(bytes);
-
-    final apiKey = '구글 api 키'; // Google Vision API 키
-    final url = 'https://vision.googleapis.com/v1/images:annotate?key=$apiKey';
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'requests': [
-          {
-            'image': {'content': base64Image},
-            'features': [
-              {'type': 'LABEL_DETECTION', 'maxResults': 10},
-            ],
-          },
-        ],
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(response.body);
-      print('Google Vision API 응답: $responseBody');
-
-      // 분석 결과 추출
-      final labels = responseBody['responses'][0]['labelAnnotations']
-          .map((label) => label['description'])
-          .join(', ');
-
-      // TTS로 분석 결과 말하기
-      _speak('이미지 분석 결과는 다음과 같습니다: $labels');
-    } else {
-      print('Google Vision API 요청 실패');
-      print('응답 코드: ${response.statusCode}');
-      print('응답 메시지: ${response.body}');
-      _speak('이미지 분석에 실패했습니다.');
-    }
-  }
-
-  Future<void> _takePicture() async {
-    try {
-      await _initializeControllerFuture; // 초기화 완료 대기
-      final image = await _controller.takePicture();
-      if (!mounted) return;
-
-      await _sendPictureToGoogleVision(image); // Google Vision API로 이미지 전송
-    } catch (e) {
-      print('사진 촬영 오류: $e');
-    }
-  }
-
-  Future _speak(String text) async {
-    await flutterTts.setLanguage("ko-KR");
-    await flutterTts.speak(text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('카메라')),
-      body: GestureDetector(
-        onLongPress: () async {
-          await _takePicture();
-        },
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity! > 0) {
-            _speak("홈");
-            Navigator.pop(context);
-          }
-        },
-        child: FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return CameraPreview(_controller);
-            } else {
-              return Center(child: CircularProgressIndicator());
-            }
-          },
-        ),
       ),
     );
   }
